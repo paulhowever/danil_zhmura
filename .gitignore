@@ -4,3 +4,4 @@ build/
 *.tmp
 .claude/settings.local.json
 .env*
+.venv/
