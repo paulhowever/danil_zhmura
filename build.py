@@ -120,7 +120,7 @@ STYLES = {
     "Normal": (28, False, "both", 709, 360, 0, False),
     "BodyText": (28, False, "both", 709, 360, 0, False),
     "FirstParagraph": (28, False, "both", 709, 360, 0, False),
-    "Compact": (24, False, "left", 0, 240, 0, False),
+    "Compact": (28, False, "both", 709, 360, 0, False),
     "Heading1": (28, True, "center", 0, 240, 360, True),
     "Heading2": (28, True, "center", 0, 240, 360, False),
     "Heading3": (28, True, "center", 0, 240, 360, False),
@@ -286,10 +286,19 @@ def fix_document(xml):
             borders.append(el(side, val="single", sz=4, space=0, color="000000"))
         tblpr.append(borders)
         tblpr.append(el("tblW", w=5000, type="pct"))
-        for row_i, row in enumerate(tbl.findall(q("tr"))):
+        rows = tbl.findall(q("tr"))
+        keep = len(rows) <= 16  # короткая таблица целиком остается на одной странице
+        for row_i, row in enumerate(rows):
+            trpr = child(row, "trPr", first=True)
+            for tag in ("cantSplit", "tblHeader"):
+                for old in trpr.findall(q(tag)):
+                    trpr.remove(old)
+            trpr.append(el("cantSplit"))
+            if row_i == 0:
+                trpr.append(el("tblHeader"))
             for p in row.iter(q("p")):
                 set_ppr(child(p, "pPr", first=True), jc="center" if row_i == 0 else "left",
-                        first_line=0, line=240)
+                        first_line=0, line=240, keep_next=keep)
                 for r in p.iter(q("r")):
                     set_rpr(child(r, "rPr", first=True), size=24)
     for p in list(body.iter(q("p"))):
@@ -301,6 +310,21 @@ def fix_document(xml):
             set_ppr(child(p, "pPr", first=True), jc="center", first_line=0, line=240,
                     before=120, keep_next=True)
             p.append(chart_run(n))
+        elif text.startswith("NOTE:"):
+            rest = text.split(":", 1)[1].strip()
+            for r in p.findall(q("r")):
+                p.remove(r)
+            set_ppr(child(p, "pPr", first=True), jc="both", first_line=0, line=240,
+                    before=60, after=240)
+            r1 = etree.SubElement(p, q("r"))
+            set_rpr(child(r1, "rPr"), size=24)
+            child(r1, "rPr").append(el("i"))
+            etree.SubElement(r1, q("t")).text = "Примечание."
+            r2 = etree.SubElement(p, q("r"))
+            set_rpr(child(r2, "rPr"), size=24)
+            t2 = etree.SubElement(r2, q("t"))
+            t2.text = " " + rest
+            t2.set("{http://www.w3.org/XML/1998/namespace}space", "preserve")
         elif text.startswith("::"):
             kind, _, rest = text.partition(" ")
             for r in p.findall(q("r")):
