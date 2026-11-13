@@ -208,7 +208,7 @@ def build_chart(name):
     return n
 
 
-def chart_run(n, width_cm=15.5, height_cm=8.0):
+def chart_run(n, width_cm=15.5, height_cm=6.0):
     cx, cy = int(width_cm * 360000), int(height_cm * 360000)
     xml = f'''<w:r xmlns:w="{W}" xmlns:wp="{WP}" xmlns:a="{A}" xmlns:c="{C}" xmlns:r="{R}">
 <w:drawing><wp:inline distT="0" distB="0" distL="0" distR="0">
