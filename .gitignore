@@ -1,4 +1,5 @@
 build/
+sources/books/*Юрайт*
 .DS_Store
 ~$*
 *.tmp
